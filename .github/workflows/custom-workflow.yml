@@ -1,0 +1,29 @@
+name: Generate Release Notes
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate release notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: releaseNotes } = await github.repos.generateReleaseNotes({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: context.ref.replace('refs/tags/', '')
+            });
+            console.log(releaseNotes.body);
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.generate.outputs.releaseNotes }}
